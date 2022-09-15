@@ -6,6 +6,7 @@
 #include <hpdf.h>
 #include <string.h>
 #include <fstream>
+#include <vector>
 
 struct PdfUserData
 {
@@ -73,17 +74,19 @@ int32_t main(int32_t argc, char *argv[])
       return EXIT_FAILURE;
     }
 
+    std::vector<std::string> file_content;
+
     // Read lines of file
     while (!input_file.eof())
     {
       std::string line;
       getline(input_file, line);
-      lines_number++;
+      file_content.emplace_back(std::move(line));
     }
 
     pdf_user_data = PdfUserData{"Adding one page..."};
     HPDF_Page page1 = HPDF_AddPage(pdf);
-    doc_height = HPDF_Page_GetHeight(page1) + lines_number * font_size;
+    doc_height = HPDF_Page_GetHeight(page1) + file_content.size() * font_size + 500;
     doc_width = HPDF_Page_GetWidth(page1);
 
     HPDF_Page_SetWidth(page1, doc_width);
@@ -95,17 +98,15 @@ int32_t main(int32_t argc, char *argv[])
     HPDF_Page_SetFontAndSize(page1, pdf_font, font_size);
     HPDF_Page_MoveTextPos(page1, 0, doc_height - 10);
 
-    // Return cursor pointer to the beginning of the file.
-    input_file.seekg(0, std::ios::beg);
-
-    while (!input_file.eof())
+    for (const auto &output_text : file_content)
     {
-      std::string output_text;
-      getline(input_file, output_text);
+      std::cout << "LINE: " << output_text.c_str() << '\n';
       HPDF_Page_ShowText(page1, output_text.c_str());
       HPDF_Page_MoveTextPos(page1, 0, -18);
+      std::cout << "Debuggin in for...\n";
     }
 
+    std::cout << "Debuggin...\n";
     HPDF_Page_EndText(page1);
 
     pdf_user_data = PdfUserData{"Saving PDF..."};
