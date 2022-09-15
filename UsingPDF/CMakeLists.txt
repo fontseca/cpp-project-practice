@@ -13,3 +13,5 @@ find_package(unofficial-libharu CONFIG REQUIRED)
 add_executable(${PROJECT_NAME} Main.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::libharu::haru)
+
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
