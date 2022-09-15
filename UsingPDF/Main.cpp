@@ -5,6 +5,7 @@
 #include <string>
 #include <hpdf.h>
 #include <string.h>
+#include <istream>
 
 struct PdfUserData
 {
@@ -45,13 +46,16 @@ private:
                     static_cast<PdfUserData *>(user_data));
 }
 
-int32_t main()
+int32_t main(int32_t argc, const char *argv[])
 {
   PdfUserData pdf_user_data{"Creación del PDF "};
   HPDF_Doc pdf = HPDF_NewEx(HaruPdfErrorHandler, nullptr, nullptr, 0, &pdf_user_data);
 
   try
   {
+    // std::istringstream file_name(argv[0]);
+    // std::ifstream input_file(file_name.rdbuf());
+
     // Crear fuente para el pdf
     pdf_user_data = PdfUserData{"Creando fuente del PDF..."};
     HPDF_Font pdf_font = HPDF_GetFont(pdf, "Helvetica", NULL);
