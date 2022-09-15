@@ -1,2 +1,0 @@
-/home/al/cpp-project-practice/build/CMakeFiles/edit_cache.dir
-/home/al/cpp-project-practice/build/CMakeFiles/rebuild_cache.dir
