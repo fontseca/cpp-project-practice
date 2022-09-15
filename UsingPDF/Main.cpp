@@ -5,7 +5,7 @@
 #include <string>
 #include <hpdf.h>
 #include <string.h>
-#include <istream>
+#include <fstream>
 
 struct PdfUserData
 {
@@ -46,38 +46,70 @@ private:
                     static_cast<PdfUserData *>(user_data));
 }
 
-int32_t main(int32_t argc, const char *argv[])
+int32_t main(int32_t argc, char *argv[])
 {
+  if (argc < 2)
+  {
+    std::cerr << "At least one argument is required.\n";
+    return EXIT_FAILURE;
+  }
+
   PdfUserData pdf_user_data{"Creación del PDF "};
   HPDF_Doc pdf = HPDF_NewEx(HaruPdfErrorHandler, nullptr, nullptr, 0, &pdf_user_data);
+  HPDF_REAL doc_height;
+  HPDF_REAL doc_width;
+  int32_t lines_number = 0;
+  int32_t font_size = 12;
 
   try
   {
-    // std::istringstream file_name(argv[0]);
-    // std::ifstream input_file(file_name.rdbuf());
-
-    // Crear fuente para el pdf
-    pdf_user_data = PdfUserData{"Creando fuente del PDF..."};
+    std::ifstream input_file{argv[1]};
+    pdf_user_data = PdfUserData{"Creating font..."};
     HPDF_Font pdf_font = HPDF_GetFont(pdf, "Helvetica", NULL);
 
-    pdf_user_data = PdfUserData{"Agregando una página..."};
+    while (!input_file.is_open())
+    {
+      std::cerr << "Error when trying to open file.\n";
+      return EXIT_FAILURE;
+    }
+
+    // Read lines of file
+    while (!input_file.eof())
+    {
+      std::string line;
+      getline(input_file, line);
+      lines_number++;
+    }
+
+    pdf_user_data = PdfUserData{"Adding one page..."};
     HPDF_Page page1 = HPDF_AddPage(pdf);
-    HPDF_Page_SetWidth(page1, 400);
-    HPDF_Page_SetHeight(page1, 500);
+    doc_height = HPDF_Page_GetHeight(page1) + lines_number * font_size;
+    doc_width = HPDF_Page_GetWidth(page1);
 
-    // Y-axis is inverted
+    HPDF_Page_SetWidth(page1, doc_width);
+    HPDF_Page_SetHeight(page1, doc_height);
 
-    pdf_user_data = PdfUserData{"Iniciando texto..."};
+    pdf_user_data = PdfUserData{"Starting text..."};
+
     HPDF_Page_BeginText(page1);
+    HPDF_Page_SetFontAndSize(page1, pdf_font, font_size);
+    HPDF_Page_MoveTextPos(page1, 0, doc_height - 10);
 
-    // Write to the PDF
-    HPDF_Page_SetFontAndSize(page1, pdf_font, 20);
-    HPDF_Page_MoveTextPos(page1, 20, 450);
-    HPDF_Page_ShowText(page1, "C++ Document PDF");
+    // Return cursor pointer to the beginning of the file.
+    input_file.seekg(0, std::ios::beg);
+
+    while (!input_file.eof())
+    {
+      std::string output_text;
+      getline(input_file, output_text);
+      HPDF_Page_ShowText(page1, output_text.c_str());
+      HPDF_Page_MoveTextPos(page1, 0, -18);
+    }
+
     HPDF_Page_EndText(page1);
 
-    pdf_user_data = PdfUserData{"Guardando pdf..."};
-    HPDF_SaveToFile(pdf, "Test.pdf");
+    pdf_user_data = PdfUserData{"Saving PDF..."};
+    HPDF_SaveToFile(pdf, "Out.pdf");
     HPDF_Free(pdf);
   }
   catch (const PdfExeption &e)
